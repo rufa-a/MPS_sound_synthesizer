@@ -17,6 +17,8 @@
 //volatile 
 unsigned int height[9] = //{2374, 2174, 1996, 1884, 1678, 1496, 1332, 2374};
 	{120, 107, 95, 90, 80, 71, 63, 60, 0};// 3260, 3167, 3067, 2374};//2374};
+unsigned int height_delay[9] = 
+	{1911, 1702, 1516, 1432, 1275, 1136, 1012, 9555};
 //volatile 
 unsigned int duration[4] = {1000, 500, 250, 125};
 
@@ -240,9 +242,9 @@ unsigned int format_check(unsigned int num){
 }
 
 void piano(unsigned char t){ //клавиатура 1-й октавы
-	unsigned int i = 0;
-	for (i =  0; i < 8; i++){
-		if ((t&1) == 0 /*&& height[i] != 0*/){
+	//unsigned int i = 0;
+	/*for (int i =  0; i < 8; i++){
+		if ((t&1) == 0){
 			//_delay_us(200);
 			//while (!(t|1) == 0){
 				
@@ -254,7 +256,132 @@ void piano(unsigned char t){ //клавиатура 1-й октавы
 			//}
 		} 
 		t >>= 1;	
-	}
+	}*/
+
+
+	//(PINC&(1<<pc_arr[i]))
+	//try to play chord
+	if (((PINC&(1<<PC0)) == 0) && ((t&(1<<PC2)) == 0) && ((t&(1<<PC4)) == 0)&& ((t&(1<<PC7)) == 0)){
+	// doesn't work with 4th note (c2)
+		for (int i = 0; i < 5; i++){
+			PORTD |= (1<<PD5);
+			_delay_us(1911);//3831);
+			PORTD &= ~(1<<PD5);
+			_delay_us(1911);
+		}
+		for (int i = 0; i < 5; i++){
+			PORTD |= (1<<PD5);
+			_delay_us(1516);//3831);
+			PORTD &= ~(1<<PD5);
+			_delay_us(1516);
+		}
+		for (int i = 0; i < 5; i++){
+			PORTD |= (1<<PD5);
+			_delay_us(1275);//3831);
+			PORTD &= ~(1<<PD5);
+			_delay_us(1275);
+		}
+		for (int i = 0; i < 5; i++){
+			PORTD |= (1<<PD5);
+			_delay_us(9555);//3831);
+			PORTD &= ~(1<<PD5);
+			_delay_us(9555);
+		}
+
+	} else 
+		if (((PINC&(1<<PC0)) == 0) && ((t&(1<<PC2)) == 0) && ((t&(1<<PC4)) == 0)){
+			for (int i = 0; i < 5; i++){
+				PORTB |= (1<<PB0);
+				_delay_us(1911);//3831);
+				PORTB &= ~(1<<PB0);
+				_delay_us(1911);
+			}
+			for (int i = 0; i < 5; i++){
+				PORTB |= (1<<PB1);
+				_delay_us(1516);//3831);
+				PORTB &= ~(1<<PB1);
+				_delay_us(1516);
+			}
+			for (int i = 0; i < 5; i++){
+				PORTB |= (1<<PB2);
+				_delay_us(1275);//3831);
+				PORTB &= ~(1<<PB2);
+				_delay_us(1275);
+			}
+		} else 
+			if (((PINC&(1<<PC0)) == 0) && ((t&(1<<PC2)) == 0)){
+				for (int i = 0; i < 5; i++){
+					PORTB |= (1<<PB0);
+					_delay_us(1911);//3831);
+					PORTB &= ~(1<<PB0);
+					_delay_us(1911);
+				}
+				for (int i = 0; i < 5; i++){
+					PORTB |= (1<<PB1);
+					_delay_us(1516);//3831);
+					PORTB &= ~(1<<PB1);
+					_delay_us(1516);
+				}
+			} else
+				for (int i =  0; i < 8; i++){
+					if ((t&1) == 0){
+						//_delay_us(200);
+						//while (!(t|1) == 0){
+				
+							OCR1A = height[i];//4748;
+							TCCR1A = 0X40;
+							//duration_delay(duration[0]);			
+							_delay_ms(500);
+							//_delay_us(200);
+						//}
+					} 
+					t >>= 1;	
+				}
+
+		//only with PD5
+		/*for (int i = 0; i < 5; i++){
+			PORTD |= (1<<PD5);
+			_delay_us(1911);//3831);
+			PORTD &= ~(1<<PD5);
+			_delay_us(1911);
+		}
+		for (int i = 0; i < 5; i++){
+			PORTD |= (1<<PD5);
+			_delay_us(1516);//3831);
+			PORTD &= ~(1<<PD5);
+			_delay_us(1516);
+		}
+		for (int i = 0; i < 5; i++){
+			PORTD |= (1<<PD5);
+			_delay_us(1275);//3831);
+			PORTD &= ~(1<<PD5);
+			_delay_us(1275);
+		}*/
+		
+
+		//does't sound a chord with timer
+		/*
+		for (int i = 0; i < 5; i++){
+			OCR1A = height[0];//4748;
+			TCCR1A = 0X40;
+		//duration_delay(duration[0]);			
+			_delay_ms(500);
+		}
+		for (int i = 0; i < 5; i++){
+			OCR1A = height[2];//4748;
+			TCCR1A = 0X40;
+		//duration_delay(duration[0]);			
+		_delay_ms(500);
+		}
+		for (int i = 0; i < 5; i++){
+			OCR1A = height[4];//4748;
+			TCCR1A = 0X40;
+		//duration_delay(duration[0]);			
+		_delay_ms(500);
+		}*/		
+	//}
+
+
 	TCCR1A = 0X00; //отключение динамика
 }
 
@@ -465,12 +592,13 @@ int main(void)
 
 
 			//for (int aa = 0; aa < 5; aa++){
-				PORTB |= (1<<PB0) | (1<<PB1);//PORTB = 0x01;
+			//nothing succeeded
+				/*PORTB |= (1<<PB0) | (1<<PB1);//PORTB = 0x01;
 				_delay_us(3033);
 				PORTB &= ~(1<<PB1);//PORTB = 0x01;
 				_delay_us(798);
 				PORTB &= ~(1<<PB0);//PORTB = 0x00;
-				_delay_us(500);
+				_delay_us(500);*/
 
 				/*for (int a = 0; a < 5; a++){
 					
@@ -494,22 +622,30 @@ int main(void)
 				//duration_delay(duration[0]);			
 				_delay_ms(500);
 				TCCR1A = 0x00;*/
-
 				
+				//4748, 4480, 4228, 3992, 3768,
+				for (int i = 0; i < 5; i++){
+					PORTB |= (1<<PB0);
+					_delay_us(1911);//3831);
+					PORTB &= ~(1<<PB0);
+					_delay_us(1911);
+				}
+				
+				for (int i = 0; i < 5; i++){
+					PORTB |= (1<<PB1);
+					_delay_us(1516);//3033);
+					PORTB &= ~(1<<PB1);
+					_delay_us(1516);
+					//_delay_ms(500);
+				}
 
-				PORTB |= (1<<PB1);
-				_delay_us(3033);
-				PORTB &= ~(1<<PB1);
-				_delay_us(3033);
-				_delay_ms(500);
-
-
-				PORTB |= (1<<PB2);
-				_delay_us(2551);
-				PORTB &= ~(1<<PB2);
-				_delay_us(2551);
-				_delay_ms(500);
-
+				for (int i = 0; i < 5; i++){
+					PORTB |= (1<<PB2);
+					_delay_us(1275);//2551);
+					PORTB &= ~(1<<PB2);
+					_delay_us(1275);
+					//_delay_ms(500);
+				}
 			//}
 		}
 				
