@@ -92,62 +92,55 @@ void info_output(unsigned int num){
 }
 
 char write_buffer[6][39];
+int sym_count;
+char prev_buf; //предыдущий символ при считывании
 
-void write_melody(int *notes_number, unsigned char buffer, int *write_index, unsigned char status, int *write_permit){
-	//if (((status & FRAMING_ERROR) == 0)){// && ((status & RX_COMPLETE) == 0)){ //завершение приема 
-	//if (button_permit == 1){
+void write_melody(int *notes_number, unsigned char buffer, int *write_index, unsigned char status, int *write_permit, int mode){
+		int note_drt = 0; // для режима 1
+		char check_sym = buffer;
 		if (*write_index == -1){ //начало записи мелодии
-			*write_permit = 1;
+			if (mode == 0) 
+				*write_permit = 1;
 			*write_index = 0;
-	
-			/*OCR1A = height[4];//4748;
-			TCCR1A = 0x40;
-			//duration_delay(duration[0]);			
-			_delay_ms(50);
-			TCCR1A = 0x00;*/
+			sym_count = 0; // -- начало записи
+			prev_buf = ' ';
 		}
-		if ((*write_permit == 1) && ((buffer == 13) || (*write_index == 38))){ //по нажатию на enter - конец записи мелодии
+		if ((mode == 0) && (*write_permit == 1) && ((buffer == 13) || (*write_index == 38))){ //по нажатию на enter - конец записи мелодии
 			write_buffer[*notes_number][*write_index] = '#';
 			*write_permit = 0;
 			*write_index = -1;
-			*notes_number += 1;
-			 // признак конца мелодии - enter
-			/*OCR1A = height[7];//4748;
-			TCCR1A = 0x40;
-			//duration_delay(duration[0]);			
-			_delay_ms(50);
-			TCCR1A = 0x00;*/
-
-			//вывод запроса
-			//unsigned char buf;
-			//itoa(*notes_number, &buf, 10);
-			//buf = (char)(*notes_number + 48);
-			
-			
-			//info_output(*notes_number);
-			/*send_Uart_str("Input ");
-			switch (*notes_number){
-				case 1: send_Uart_str("2nd");
-				break;
-				case 2: send_Uart_str("3d");
-				break;
-				case 3: send_Uart_str("4th");
-				break;
-				case 4: send_Uart_str("5th");
-				break;
-				case 5: send_Uart_str("6th");
-				break;
-				default:
-				break;
-			}
-		
-			send_Uart_str(" melody:");//	отправка строки
-			send_Uart(13);*/
+			*notes_number += 1;	
+			// выход из функции		
 		}
-		//write_index = -1;
-		if (*write_permit == 1 && *write_index + 1 < 39 && buffer != 8){ // 41 для '#'
+		// запись по "интервалам" зажатия клавиш
+		if (mode == 1){
+			// количество введенных одинаковых символов
+			if ((buffer == prev_buf)){ // количество введенных символов
+			
+				sym_count += 1;
+				*write_permit = 0;
+			}
+			// пришла новая нота, можно записывать предыдущую
+			if ((buffer != prev_buf) && (prev_buf != ' ')){
+				note_drt = sym_count;
+				sym_count = 1; 
+				check_sym = prev_buf;
+				prev_buf = buffer;
+				*write_permit = 1;
+			} 
+			// когда пришел самый первый символ
+			if ((sym_count == 0)){ // в случае ввода по длительности нажатия, запоминаем появившийся символ
+				prev_buf = buffer; //запоминаем символ
+				sym_count = 1;
+				//*write_index += 1;
+				*write_permit = 0;
+			}
+		}
+		
+		if ((*write_permit == 1) && (*write_index + 1 < 39) && (check_sym != 8)){ // 41 для '#'
 			if (*write_index % 2 == 0){
-				switch (buffer){
+				
+				switch (check_sym){
 					case 'a':
 						write_buffer[*notes_number][*write_index] = '0';
 						break;
@@ -177,38 +170,53 @@ void write_melody(int *notes_number, unsigned char buffer, int *write_index, uns
 						break;
 					default: break;
 				}
+				if (mode == 1){ // определение длительности
+					*write_index += 1;
+					if (note_drt == 1)
+						write_buffer[*notes_number][*write_index] = '0'; //целая нота
+					if ((note_drt > 1) && (note_drt <= 4))
+						write_buffer[*notes_number][*write_index] = '1'; //целая нота
+					if ((note_drt >= 5) && (note_drt <= 8))
+						write_buffer[*notes_number][*write_index] = '2'; //целая нота
+					if (note_drt > 8)
+						write_buffer[*notes_number][*write_index] = '3'; //целая нота
+					*write_index += 1;	
+					// конеу мелодии
+					if (((buffer == 13) && (*write_permit == 1)) || (*write_index == 38)){ 
+						write_buffer[*notes_number][*write_index] = '#';
+						*write_permit = 0;
+						*write_index = -1;
+						*notes_number += 1;	
+						// выход из функции		
+					}
+				}
+				
+
 			}
 				//default:
 				//write_buffer[*notes_number][*write_index] = buffer - 1;
-			if (*write_index % 2 == 1){
-				switch (buffer){
-				case ('1'):
-				case ('2'):
-				case ('3'):
-				case ('4'):
-					write_buffer[*notes_number][*write_index] = buffer - 1;
-					break;
-				/*case '2':// '2' || '3' || '4'):
-					write_buffer[*notes_number][*write_index] = buffer -  1;
-					break;
-				case '3':// '2' || '3' || '4'):
-					write_buffer[*notes_number][*write_index] = buffer - 1;
-					break;
-				case '4':// '2' || '3' || '4'):
-					write_buffer[*notes_number][*write_index] = buffer - 1;
-					break;*/
-				default:
-					break;
+			// запись длительности
+			if (mode == 0) {
+				if (*write_index % 2 == 1){
+					switch (buffer){
+					case ('1'):
+					case ('2'):
+					case ('3'):
+					case ('4'):
+						write_buffer[*notes_number][*write_index] = buffer - 1;
+						break;
+					default:
+						break;
+					}
 				}
+			
+				*write_index += 1;
+				
 			}
-			/*OCR1A = height[2];//4748;
-			TCCR1A = 0x40;
-			//duration_delay(duration[0]);			
-			_delay_ms(50);
-			TCCR1A = 0x00;*/
-			*write_index += 1;
 		}
-		if (buffer == 8) //backspace
+	
+
+		if ((buffer == 8) && (mode == 0)) // при удалении символов с помощью backspace
 			*write_index -= 1;
 	//}
 }
@@ -484,8 +492,9 @@ int main(void)
 //	DDRC = 0x00; //на ввод
 	PORTA = 0xff; //кнопки выбора мелодии и записи мелодии
 	DDRA = 0x00;
-	PORTD = 0x04; // PD2 - переключение режима
-	DDRD = 0x60;//0x20;//0x20; //на вывод PD5/OC1A - динамик
+	PORTD = 0x0C; // PD2 - переключение режима записи/воспроизведения, 
+				 // PD3 - способ записи
+	DDRD = 0x60;// на вывод PD5/OC1A - динамик
 //	PORTE = 0x00;
 //	DDRE = 0x04; //на вывод PE2/OC1B - динамик
 	PORTB = 0xf8; //PB0..PB2 - динамики для трезвучия
@@ -533,6 +542,7 @@ int main(void)
 	status = USR; //USR
 
 	int write_permit = 0;
+	int input_mode = 0; // способ записи мелодии
 	//unsigned int write_index = 0;
 	//char write_buffer[41]; // 41 - для enter
 	
@@ -550,7 +560,12 @@ int main(void)
     {
 		
 		temp = PINA;
-		
+		if ((PIND&(1<<PD3))==0){
+			input_mode = 0; // если нажата, то ввод с определением длительностей
+		} else {
+			input_mode = 1;			
+		}
+
 		if ((PIND&(1<<PD2))==0) { //если нажата кнопка на запись
 			uart_init();
 			piano(temp);
@@ -561,7 +576,7 @@ int main(void)
 				
 				status = USR;//??
 				
-				write_melody(&melody_number, data, &note_number, status, &write_permit);
+				write_melody(&melody_number, data, &note_number, status, &write_permit, input_mode);
 				/*while (format_check(melody_number - 1) == 0){
 					melody_number -= 1;
 					send_Uart_str(13);
@@ -573,6 +588,7 @@ int main(void)
 				if (data == 13){
 					if (format_check(melody_number - 1) == 1){
 						melody_number -= 1;
+						note_number = -1;
 						//send_Uart_str(13);
 						send_Uart_str("Wrong format!");
 						send_Uart_str(13);
