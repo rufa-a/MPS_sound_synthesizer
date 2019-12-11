@@ -15,12 +15,11 @@
 //#undef __OPTIMIZE__ //попытка передать элемент массива в функцию задержки
 //unsigned int height[7] = {4748, 4480, 4228, 3992, 3768, 3556, 3356};
 //volatile 
-unsigned int height[9] = //{2374, 2174, 1996, 1884, 1678, 1496, 1332, 2374};
+volatile unsigned int height[9] = //{2374, 2174, 1996, 1884, 1678, 1496, 1332, 2374};
 	{120, 107, 95, 90, 80, 71, 63, 60, 0};// 3260, 3167, 3067, 2374};//2374};
-unsigned int height_delay[9] = 
-	{1911, 1702, 1516, 1432, 1275, 1136, 1012, 9555};
-//volatile 
-unsigned int duration[4] = {1600, 800, 400, 200};//{1000, 500, 250, 125};
+//unsigned int height_delay[9] = 
+//	{1911, 1702, 1516, 1432, 1275, 1136, 1012, 9555};
+volatile unsigned int duration[4] = {1600, 800, 400, 200};//{1000, 500, 250, 125};
 
 
 void uart_init(){
@@ -173,13 +172,13 @@ void write_melody(int *notes_number, unsigned char buffer, int *write_index, uns
 				if (mode == 1){ // определение длительности
 					*write_index += 1;
 					if (note_drt == 1)
-						write_buffer[*notes_number][*write_index] = '0'; //целая нота
-					if ((note_drt > 1) && (note_drt <= 4))
-						write_buffer[*notes_number][*write_index] = '1'; //целая нота
-					if ((note_drt >= 5) && (note_drt <= 8))
-						write_buffer[*notes_number][*write_index] = '2'; //целая нота
-					if (note_drt > 8)
 						write_buffer[*notes_number][*write_index] = '3'; //целая нота
+					if ((note_drt > 1) && (note_drt <= 4))
+						write_buffer[*notes_number][*write_index] = '2'; //целая нота
+					if ((note_drt >= 5) && (note_drt <= 8))
+						write_buffer[*notes_number][*write_index] = '1'; //целая нота
+					if (note_drt > 8)
+						write_buffer[*notes_number][*write_index] = '0'; //целая нота
 					*write_index += 1;	
 					// конеу мелодии
 					if (((buffer == 13) && (*write_permit == 1)) || (*write_index == 38)){ 
@@ -250,27 +249,8 @@ unsigned int format_check(unsigned int num){
 }
 
 void piano(unsigned char t){ //клавиатура 1-й октавы
-	//unsigned int i = 0;
-	/*for (int i =  0; i < 8; i++){
-		if ((t&1) == 0){
-			//_delay_us(200);
-			//while (!(t|1) == 0){
-				
-				OCR1A = height[i];//4748;
-				TCCR1A = 0X40;
-				//duration_delay(duration[0]);			
-				_delay_ms(500);
-				//_delay_us(200);
-			//}
-		} 
-		t >>= 1;	
-	}*/
 
-	// 1911, 1702, 1516, 1432, 1275
-	//(PINC&(1<<pc_arr[i]))
-	//try to play chord
 	if (((t&(1<<PA0)) == 0) && ((t&(1<<PA2)) == 0) && ((t&(1<<PA4)) == 0)&& ((t&(1<<PA7)) == 0)){
-	// doesn't work with 4th note (c2)
 		for (int i = 0; i < 5; i++){
 			PORTD |= (1<<PD5);
 			_delay_us(1911);//3831);
@@ -291,9 +271,9 @@ void piano(unsigned char t){ //клавиатура 1-й октавы
 		}
 		for (int i = 0; i < 5; i++){
 			PORTD |= (1<<PD5);
-			_delay_us(9555);//3831);
+			_delay_us(955);//3831);
 			PORTD &= ~(1<<PD5);
-			_delay_us(9555);
+			_delay_us(955);
 		}
 
 	} else 
@@ -332,109 +312,47 @@ void piano(unsigned char t){ //клавиатура 1-й октавы
 				}
 			} else ////////////
 				if (((t&(1<<PA0)) == 0) && ((t&(1<<PA4)) == 0)){
-					/*for (int i = 0; i < 5; i++){
+					for (int i = 0; i < 5; i++){
 						PORTD |= (1<<PD5);
 						_delay_us(1911);//3831);
 						PORTD &= ~(1<<PD5);
 						_delay_us(1911);
 					}
 					for (int i = 0; i < 5; i++){
-						PORTD |= (1<<PD6);
-						_delay_us(1516);//3831);
-						PORTD &= ~(1<<PD6);
-						_delay_us(1516);
-					}*/
-					_delay_us(200);
-					//while (!(t|1) == 0){
-				
-					OCR1A = height[0];//4748;
-					_delay_ms(500);
-					OCR1A = height[4];
-					TCCR1A = 0X50;
-					//duration_delay(duration[0]);			
-					_delay_ms(500);
-					
-					TCCR1A = 0X00; //отключение динамика
-					
-					// _delay_us(200);
-					//while (!(t|1) == 0){
-				
-					//OCR1A = height[2];//4748;
-					//TCCR1A = 0X40;
-					//duration_delay(duration[0]);			
-					//_delay_ms(500);
-
-
+						PORTD |= (1<<PD5);
+						_delay_us(1275);//3831);
+						PORTD &= ~(1<<PD5);
+						_delay_us(1275);
+					}
 				} else 
+					if (((t&(1<<PA0)) == 0) && ((t&(1<<PA7)) == 0)){
+						for (int i = 0; i < 5; i++){
+							PORTD |= (1<<PD5); // сложение частот
+							_delay_us(2389);//3831);
+							PORTD &= ~(1<<PD5);
+							_delay_us(478);
+						}
+					} else 
+
 				for (int i =  0; i < 8; i++){
 					if ((t&1) == 0){
-						_delay_us(200);
-						//while (!(t|1) == 0){
-				
-							OCR1A = height[i];//4748;
-							TCCR1A = 0X40;
-							//duration_delay(duration[0]);			
-							_delay_ms(500);
-							//_delay_us(200);
+						_delay_us(500); // программная борьба с дребезгом
+							OCR1A = height[i];
+							TCCR1A = 0X40;			
+							_delay_ms(300);
 						//}
 					} 
 					TCCR1A = 0X00; //отключение динамика
 					t >>= 1;	
 				}
-
-		//only with PD5
-		/*for (int i = 0; i < 5; i++){
-			PORTD |= (1<<PD5);
-			_delay_us(1911);//3831);
-			PORTD &= ~(1<<PD5);
-			_delay_us(1911);
-		}
-		for (int i = 0; i < 5; i++){
-			PORTD |= (1<<PD5);
-			_delay_us(1516);//3831);
-			PORTD &= ~(1<<PD5);
-			_delay_us(1516);
-		}
-		for (int i = 0; i < 5; i++){
-			PORTD |= (1<<PD5);
-			_delay_us(1275);//3831);
-			PORTD &= ~(1<<PD5);
-			_delay_us(1275);
-		}*/
-		
-
-		//does't sound a chord with timer
-		/*
-		for (int i = 0; i < 5; i++){
-			OCR1A = height[0];//4748;
-			TCCR1A = 0X40;
-		//duration_delay(duration[0]);			
-			_delay_ms(500);
-		}
-		for (int i = 0; i < 5; i++){
-			OCR1A = height[2];//4748;
-			TCCR1A = 0X40;
-		//duration_delay(duration[0]);			
-		_delay_ms(500);
-		}
-		for (int i = 0; i < 5; i++){
-			OCR1A = height[4];//4748;
-			TCCR1A = 0X40;
-		//duration_delay(duration[0]);			
-		_delay_ms(500);
-		}*/		
-	//}
-
-
 	 
 }
 
 void duration_delay(int ms){ //длительности
-
+	
 	while (ms > 0){
-	//for (int i = 1; i < ms + 1; i++){
-		_delay_ms(300);//250);
-		ms = ms - 200;//125;
+		_delay_ms(500);
+		ms = ms - 200;
 	}
 	TCCR1A = 0X00; // выключение звука
 }
@@ -446,10 +364,9 @@ void note(int h){
 	TCCR1A = 0X40;
 }
 
-void play_melody(unsigned int melody_number/*char record[41]*/){ //* - начало, # - конец, max - 20 нот
+void play_melody(unsigned int melody_number){ //* - начало, # - конец, max - 20 нот
 	unsigned int i = 0;
 	unsigned int ms = 0;
-	//int j = 0;
 			_delay_ms(1000);
 			while (write_buffer[melody_number][i] != '#'){
 				// задание высоты
@@ -459,44 +376,20 @@ void play_melody(unsigned int melody_number/*char record[41]*/){ //* - начало, #
 
 				//длительность
 				duration_delay(duration[((int)write_buffer[melody_number][i+1] - 48)]);
-				//TCCR1A = 0X00; // выключение звука
-
-				// без функций
-				/*OCR1A = height[j];//4748;
-				TCCR1A = 0X40;
-				
-				ms = duration[3];//duration[((int)write_buffer[melody_number][i+1] - 48)];
-				while (ms > 0){
-				//for (int i = 1; i < ms + 1; i++){
-					_delay_ms(125);
-					ms -= 125;
-				}
-				TCCR1A = 0X00; // выключение звука
-
-				j += 1;*/
-				//_delay_ms(500);
-				duration_delay(duration[((int)write_buffer[melody_number][i+1] - 48)]);
+				_delay_ms(500);
+				//duration_delay(duration[((int)write_buffer[melody_number][i+1] - 48)]);
 				i += 2;
 			}
 }
 
 int main(void)
 {
-	//sei();
 
-	unsigned char temp;//, help;
-	unsigned int i;
-//	unsigned int j;
-
-//	PORTC = 0xff; //клавиатура 1-й октавы и выбора мелодии
-//	DDRC = 0x00; //на ввод
 	PORTA = 0xff; //кнопки выбора мелодии и записи мелодии
 	DDRA = 0x00;
 	PORTD = 0x0C; // PD2 - переключение режима записи/воспроизведения, 
 				 // PD3 - способ записи
 	DDRD = 0x60;// на вывод PD5/OC1A - динамик
-//	PORTE = 0x00;
-//	DDRE = 0x04; //на вывод PE2/OC1B - динамик
 	PORTB = 0xf8; //PB0..PB2 - динамики для трезвучия
 	DDRB = 0x07;
 	TCCR1A = 0x00;
@@ -543,15 +436,7 @@ int main(void)
 
 	int write_permit = 0;
 	int input_mode = 0; // способ записи мелодии
-	//unsigned int write_index = 0;
-	//char write_buffer[41]; // 41 - для enter
 	
-
-
-	//unsigned int write_permit = 0;
-
-
-//	unsigned int k = 0; // -----для проверки
 
 	unsigned char pa_arr[6] = {PA0, PA1, PA2, PA3, PA4, PA5};
 	//int button_permit = 0;
@@ -559,7 +444,7 @@ int main(void)
 	while(1)					//	бесконечный рабочий цикл
     {
 		
-		temp = PINA;
+		int temp = PINA;
 		if ((PIND&(1<<PD3))==0){
 			input_mode = 0; // если нажата, то ввод с определением длительностей
 		} else {
@@ -577,24 +462,15 @@ int main(void)
 				status = USR;//??
 				
 				write_melody(&melody_number, data, &note_number, status, &write_permit, input_mode);
-				/*while (format_check(melody_number - 1) == 0){
-					melody_number -= 1;
-					send_Uart_str(13);
-					send_Uart_str("Wrong format!");
-					send_Uart_str(13);
-					info_output(melody_number);
-					write_melody(&melody_number, data, &note_number, status, &write_permit);
-				}*/
+
 				if (data == 13){
 					if (format_check(melody_number - 1) == 1){
 						melody_number -= 1;
 						note_number = -1;
-						//send_Uart_str(13);
 						send_Uart_str("Wrong format!");
 						send_Uart_str(13);
 						info_output(melody_number);
 						write_buffer[melody_number][0] = '#';
-						//write_melody(&melody_number, data, &note_number, status, &write_permit);
 					}
 					else {
 						if (melody_number < 6)
@@ -606,189 +482,12 @@ int main(void)
 			}
 			 // запрет на прием
 		} 
-		//if (PINB&(1<<PB3)) {
 		if (PIND&(1<<PD2)) { // если кнопка отжата
 			UCR &= ~(1<<RXEN);
-			for (i = 0; i < 6; i++){
+			for (int i = 0; i < 6; i++){
 				if ((PINA&(1<<pa_arr[i])) == 0)
 					play_melody(i);
-			}
+			}	
 		}
-		
-		// попытка проиграть трезвучие
-		// 3831 - do, 3033 - mi, 2551 - sol'
-		if ((PINB&(1<<PB3)) == 0) {
-			/*PORTB |= (1<<PB0) | (1<<PB1) | (1<<PB2);//height[j];//4748;
-			//TCCR1A = 0X10;
-			//help >>= 1;
-			_delay_us(2551);
-			PORTB &= ~(1<<PB2);
-			//_delay_us(2551);
-			//PORTB |= (1<<PB1);//height[j];//4748;
-			_delay_us(482);
-			PORTB &= ~(1<<PB1);
-			//_delay_us(482);
-			//PORTB |= (1<<PB2);//height[j];//4748;
-			_delay_us(798);
-			PORTB &= ~(1<<PB0);*/
-			//_delay_us(798);
-
-
-			//_delay_ms(500);
-			//OCR1A = height[2];//4748;
-
-
-
-			//TCCR1A = 0X40;
-
-			//_delay_ms(500);
-
-			//TCCR1A = 0X00;
-
-
-			//for (int aa = 0; aa < 5; aa++){
-			//nothing succeeded
-				/*PORTB |= (1<<PB0) | (1<<PB1);//PORTB = 0x01;
-				_delay_us(3033);
-				PORTB &= ~(1<<PB1);//PORTB = 0x01;
-				_delay_us(798);
-				PORTB &= ~(1<<PB0);//PORTB = 0x00;
-				_delay_us(500);*/
-
-				/*for (int a = 0; a < 5; a++){
-					
-					PORTB |= (1<<PB0);
-					_delay_us(3831);
-					PORTB &= ~(1<<PB0);
-					_delay_us(3831);
-				//_delay_ms(50);
-				}*/
-
-				//_delay_ms(500);
-
-				/*OCR1B = 120;//4748;
-				TCCR1A = 0X10;
-				//duration_delay(duration[0]);			
-				_delay_ms(500);
-				TCCR1A = 0x00;*/
-				
-				/*OCR1A = 95;//4748;
-				TCCR1A = 0X40;
-				//duration_delay(duration[0]);			
-				_delay_ms(500);
-				TCCR1A = 0x00;*/
-				
-				//4748, 4480, 4228, 3992, 3768,
-				for (int i = 0; i < 5; i++){
-					PORTB |= (1<<PB0);
-					_delay_us(1911);//3831);
-					PORTB &= ~(1<<PB0);
-					_delay_us(1911);
-				}
-				
-				for (int i = 0; i < 5; i++){
-					PORTB |= (1<<PB1);
-					_delay_us(1516);//3033);
-					PORTB &= ~(1<<PB1);
-					_delay_us(1516);
-					//_delay_ms(500);
-				}
-
-				for (int i = 0; i < 5; i++){
-					PORTB |= (1<<PB2);
-					_delay_us(1275);//2551);
-					PORTB &= ~(1<<PB2);
-					_delay_us(1275);
-					//_delay_ms(500);
-				}
-			//}
-		}
-				
     }
-
-
-
-
-
-/*	while (1){
-		temp = PINC;
-		help = temp >> 4;;
-		for (i = 0; i < 4; i++){
-			if ((temp&1) == 0){
-				OCR1A = height[i];//4748; задаем счетчику значение
-				TCCR1A = 0X40; //OC1A переключается в рпотивоположное состояние по совпадению
-				//help >>= 1;
-				_delay_ms(50);
-
-
-				
-				for (j = 4; j < 8; j++){
-					if ((help&1) == 0){
-						OCR1B = height[j];//4748;
-						TCCR1A = 0X10;
-						//help >>= 1;
-						_delay_ms(50);
-					} 
-					help >>= 1;
-			
-			
-				}
-			} 
-			temp >>= 1;
-			
-			
-		}
-/*		for (j = 4; j < 8; j++){
-					if ((help&1) == 0){
-						//for (i = 0; i = 5; i++){
-							PORTB = 0x00;
-							_delay_us(261);
-							PORTB = 0x01;
-							_delay_us(261);
-						//}
-						OCR1A = height[0];
-						TCCR1A = 0X40;
-					}
-					PORTB = 0x00;
-					help >>= 1;
-				}*/
-		
-/*		temp = PINC >> 4;
-		for (j = 4; j < 8; j++){
-			if ((temp&1) == 0){
-				OCR1B = height[j];//4748;
-				TCCR1A = 0X10;
-				//help >>= 1;
-				_delay_ms(500);
-			} 
-			temp >>= 1;
-			
-			
-		}*/
-		
-
-
-		// Здесь при нажатии одной кнопки проигрываются 2 динамика
-/*		help = PINC;// >> 4;
-		for (j = 4; j < 8; j++){
-			if (((help >> j)&1) == 0){
-				//for (i = 0; i = 5; i++){
-					PORTB = 0x00;//height[j];//4748;
-					//TCCR1A = 0X10;
-					//help >>= 1;
-					_delay_us(height_us[j]);//height_us[j]);
-					PORTB = 0x01;
-					_delay_us(height_us[j]);//height_us[j]);
-				//}
-				//OCR1A = height[0];//4748;
-				//TCCR1A = 0X40;
-				//_delay_ms(50);
-			}
-			PORTB = 0x00;
-			//help >>= 1;  // С этой строчкой вместе не проигрываются почему-то
-		}
-		//конец
-
-		TCCR1A = 0X00;
-	}*/
 }
